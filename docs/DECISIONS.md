@@ -92,6 +92,10 @@ parameters**. A variant (e.g. `vulnerable-high`) can be registered as a separate
 filter; true per-request params could later be added via an optional Zod params
 schema on the filter.
 
+**Implementation notes:** filter names must match `^[a-z0-9]+(-[a-z0-9]+)*$` (they
+travel in a comma-separated query param), checked at startup alongside duplicates.
+Sink kinds default to `rds,sql` and can be overridden with the `SINK_KINDS` env var.
+
 **Why:** explicit, type-checked, all filters visible in one place, and tests can
 build their own registry with fake filters. A test asserting every filter file is
 registered guards against forgetting the registration line.
@@ -139,7 +143,9 @@ described in the README under scaling.
     means no filters.
   - `match`: `all` (default) or `any` (see D3).
   - `limit`: positive integer, **default 1000, maximum 10000** (larger values → 400).
-    If the cap cuts the result, `meta.truncated` is `true`.
+    If the cap cuts the result, `meta.truncated` is `true`. The engine detects this
+    by finding one match beyond the limit and then stopping, so `truncated` is exact
+    and never costs a full enumeration.
 - Response is a **normalised graph plus routes as ID lists**:
   - `nodes`: unique nodes appearing in the matching routes (full node data).
   - `edges`: unique edges appearing in the matching routes, `id = "from->to"`.

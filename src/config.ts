@@ -12,9 +12,15 @@ function parsePort(value: string | undefined, fallback: number): number {
   return port;
 }
 
+/** Comma-separated list, e.g. "rds,sql". Empty or unset → fallback. */
+function parseList(value: string | undefined, fallback: readonly string[]): readonly string[] {
+  const items = (value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+  return items.length > 0 ? items : fallback;
+}
+
 export const config = {
   port: parsePort(process.env.PORT, 3000),
   dataPath: process.env.GRAPH_DATA_PATH ?? path.join(projectRoot, "data", "train-ticket-graph.json"),
-  /** Node kinds treated as sinks by the "sink" filter (D4). */
-  sinkKinds: ["rds", "sql"],
+  /** Node kinds treated as sinks by the "sink" filter (D4). Override with SINK_KINDS. */
+  sinkKinds: parseList(process.env.SINK_KINDS, ["rds", "sql"]),
 } as const;
