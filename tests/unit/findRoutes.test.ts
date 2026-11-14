@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { config } from "../../src/config.js";
-import { loadGraph } from "../../src/graph/loadGraph.js";
+import { loadBundledGraph } from "../../src/graph/loadGraph.js";
 import { neighbors, type Graph, type Route } from "../../src/graph/types.js";
 import { findRoutes, findRoutesFrom } from "../../src/traversal/findRoutes.js";
 import {
@@ -114,7 +113,7 @@ describe("findRoutes: startNodes option", () => {
 
 describe("findRoutes on the provided data", () => {
   it("produces the 299 routes from D1, all valid", async () => {
-    const graph = await loadGraph(config.dataPath, { info: () => {}, warn: () => {} });
+    const graph = loadBundledGraph({ info: () => {}, warn: () => {} });
     const routes = all(graph);
 
     expect(routes).toHaveLength(299);

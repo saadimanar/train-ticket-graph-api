@@ -1,11 +1,10 @@
 import type { Express } from "express";
 import request from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
-import { createApp } from "../../src/app.js";
-import { config } from "../../src/config.js";
+import { createApp } from "../../src/createApp.js";
 import type { RoutesResponse } from "../../src/engine/toResponse.js";
 import { createDefaultRegistry } from "../../src/filters/index.js";
-import { loadGraph } from "../../src/graph/loadGraph.js";
+import { loadBundledGraph } from "../../src/graph/loadGraph.js";
 
 const silent = { info: () => {}, warn: () => {} };
 
@@ -27,7 +26,7 @@ function expectConsistent(body: RoutesResponse): void {
 describe("GET /routes on the provided data", () => {
   let app: Express;
   beforeAll(async () => {
-    app = createApp({ graph: await loadGraph(config.dataPath, silent), registry: createDefaultRegistry() });
+    app = createApp({ graph: loadBundledGraph(silent), registry: createDefaultRegistry() });
   });
 
   const get = async (query: string) => {

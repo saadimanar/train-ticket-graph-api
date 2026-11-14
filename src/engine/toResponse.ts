@@ -16,6 +16,17 @@ export interface RoutesResponse {
   };
 }
 
+/** Response format of GET /graph (D11): the whole graph, same node/edge format as /routes. */
+export interface GraphResponse {
+  nodes: NodeDto[];
+  edges: EdgeDto[];
+  meta: { nodeCount: number; edgeCount: number };
+}
+
+/**
+ * The fields a UI needs to style a node are always present (never omitted):
+ * id, kind, publicExposed, vulnerabilities, missing. The rest are optional.
+ */
 export interface NodeDto {
   id: string;
   kind: string;
@@ -75,6 +86,20 @@ export function toRoutesResponse(graph: Graph, result: QueryResult): RoutesRespo
       truncated: result.truncated,
     },
   };
+}
+
+/**
+ * Every node (including isolated ones and placeholders) and every edge, in graph
+ * order. Ids match GET /routes, so a client can draw this once and highlight
+ * routes on top of it.
+ */
+export function toGraphResponse(graph: Graph): GraphResponse {
+  const nodes = [...graph.nodes.values()].map(toNodeDto);
+  const edges: EdgeDto[] = [];
+  for (const [from, targets] of graph.adjacency) {
+    for (const to of targets) edges.push({ id: edgeId(from, to), from, to });
+  }
+  return { nodes, edges, meta: { nodeCount: nodes.length, edgeCount: edges.length } };
 }
 
 function toNodeDto(node: GraphNode): NodeDto {

@@ -1,6 +1,6 @@
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
-import { createApp } from "../../src/app.js";
+import { createApp } from "../../src/createApp.js";
 import type { RoutesResponse } from "../../src/engine/toResponse.js";
 import { createDefaultRegistry } from "../../src/filters/index.js";
 import { createRegistry } from "../../src/filters/registry.js";

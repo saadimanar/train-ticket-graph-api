@@ -1,7 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
-import { createApp } from "../../src/app.js";
+import { createApp } from "../../src/createApp.js";
 import { errorHandler, HttpError } from "../../src/api/errors.js";
 import { createRegistry } from "../../src/filters/registry.js";
 import { makeGraph } from "../fixtures/graphs.js";

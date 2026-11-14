@@ -1,6 +1,6 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { createApp } from "../../src/app.js";
+import { createApp } from "../../src/createApp.js";
 import { createDefaultRegistry } from "../../src/filters/index.js";
 import { makeGraph } from "../fixtures/graphs.js";
 

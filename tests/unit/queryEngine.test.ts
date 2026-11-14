@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { config } from "../../src/config.js";
 import { createQueryEngine, selectStartNodes, type MatchMode } from "../../src/engine/queryEngine.js";
 import { createDefaultRegistry } from "../../src/filters/index.js";
 import { createRegistry, UnknownFilterError } from "../../src/filters/registry.js";
 import type { RouteFilter } from "../../src/filters/types.js";
-import { loadGraph } from "../../src/graph/loadGraph.js";
+import { loadBundledGraph } from "../../src/graph/loadGraph.js";
 import type { Graph, Route } from "../../src/graph/types.js";
 import { findRoutes } from "../../src/traversal/findRoutes.js";
 import { makeGraph } from "../fixtures/graphs.js";
@@ -137,7 +136,7 @@ describe("query engine: start-node pruning (D5)", () => {
 });
 
 describe("query engine on the provided data", async () => {
-  const graph = await loadGraph(config.dataPath, { info: () => {}, warn: () => {} });
+  const graph = loadBundledGraph({ info: () => {}, warn: () => {} });
   const registry = createDefaultRegistry();
   const engine = createQueryEngine(graph, registry);
 

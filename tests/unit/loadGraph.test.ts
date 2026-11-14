@@ -2,10 +2,12 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { config } from "../../src/config.js";
+import { fileURLToPath } from "node:url";
 import { GraphDataError } from "../../src/graph/buildGraph.js";
-import { loadGraph, type Logger } from "../../src/graph/loadGraph.js";
+import { loadBundledGraph, loadGraph, type Logger } from "../../src/graph/loadGraph.js";
 import { edgeCount, neighbors } from "../../src/graph/types.js";
+
+const dataFile = fileURLToPath(new URL("../../data/train-ticket-graph.json", import.meta.url));
 
 function recordingLogger(): Logger & { infos: string[]; warns: string[] } {
   const infos: string[] = [];
@@ -16,7 +18,7 @@ function recordingLogger(): Logger & { infos: string[]; warns: string[] } {
 describe("loadGraph with the provided data file", () => {
   it("loads all nodes, edges and quirks as decided in D8", async () => {
     const logger = recordingLogger();
-    const graph = await loadGraph(config.dataPath, logger);
+    const graph = await loadGraph(dataFile, logger);
 
     // 46 defined nodes + 1 placeholder for assurance-service.
     expect(graph.nodes.size).toBe(47);
@@ -33,6 +35,19 @@ describe("loadGraph with the provided data file", () => {
     expect(logger.warns[0]).toContain("MISSING_NODE");
     expect(logger.warns[0]).toContain("assurance-service");
     expect(logger.infos[0]).toContain("Loaded 47 nodes and 98 edges");
+  });
+});
+
+describe("loadBundledGraph", () => {
+  it("loads the same graph as reading the file from disk", async () => {
+    const logger = recordingLogger();
+    const bundled = loadBundledGraph(logger);
+    const fromDisk = await loadGraph(dataFile, recordingLogger());
+
+    expect([...bundled.nodes.entries()]).toEqual([...fromDisk.nodes.entries()]);
+    expect([...bundled.adjacency.entries()]).toEqual([...fromDisk.adjacency.entries()]);
+    expect(logger.warns).toHaveLength(1);
+    expect(logger.infos[0]).toContain("from bundled data/train-ticket-graph.json");
   });
 });
 
