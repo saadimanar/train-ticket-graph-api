@@ -23,4 +23,7 @@ export const config = {
   dataPath: process.env.GRAPH_DATA_PATH ?? path.join(projectRoot, "data", "train-ticket-graph.json"),
   /** Node kinds treated as sinks by the "sink" filter (D4). Override with SINK_KINDS. */
   sinkKinds: parseList(process.env.SINK_KINDS, ["rds", "sql"]),
+  /** GET /routes `limit`: default and maximum (D6). */
+  defaultRouteLimit: 1000,
+  maxRouteLimit: 10000,
 } as const;

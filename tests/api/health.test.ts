@@ -3,10 +3,14 @@ import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/app.js";
 import { errorHandler, HttpError } from "../../src/api/errors.js";
+import { createRegistry } from "../../src/filters/registry.js";
+import { makeGraph } from "../fixtures/graphs.js";
+
+const app = () => createApp({ graph: makeGraph({}), registry: createRegistry([]) });
 
 describe("GET /health", () => {
   it("returns 200 with status ok", async () => {
-    const res = await request(createApp()).get("/health");
+    const res = await request(app()).get("/health");
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: "ok" });
@@ -15,7 +19,7 @@ describe("GET /health", () => {
 
 describe("error handling", () => {
   it("returns 404 in the standard error shape for unknown paths", async () => {
-    const res = await request(createApp()).get("/does-not-exist");
+    const res = await request(app()).get("/does-not-exist");
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({

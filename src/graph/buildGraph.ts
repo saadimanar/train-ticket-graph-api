@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { formatZodIssues as formatIssues } from "../shared/zod.js";
 import { GraphFileSchema, RawEdgeSchema, RawNodeSchema, type RawNode } from "./schema.js";
 import type { Graph, GraphNode, GraphWarning } from "./types.js";
 
@@ -123,12 +123,6 @@ function toGraphNode(raw: RawNode): GraphNode {
 
 function placeholderNode(id: string): GraphNode {
   return { id, kind: "unknown", publicExposed: false, vulnerabilities: [], missing: true };
-}
-
-function formatIssues(error: z.ZodError): string {
-  return error.issues
-    .map((issue) => (issue.path.length > 0 ? `${issue.path.join(".")}: ${issue.message}` : issue.message))
-    .join("; ");
 }
 
 /** e.g. `nodes[3] ("auth-service")`, falling back to `nodes[3]` when there's no usable name. */

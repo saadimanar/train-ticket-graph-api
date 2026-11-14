@@ -165,6 +165,15 @@ described in the README under scaling.
   graph could try to build millions of routes and exhaust the server. `meta.truncated`
   tells the client the result was cut.
 
+**Implementation notes:**
+- Query params are **strict**: an unknown param is a 400. Otherwise the typo
+  `?filter=public` would silently return every route, which is the wrong failure mode
+  for a security query.
+- A repeated param (`filters=public&filters=sink`) is accepted as well as the
+  comma-separated form; blank entries and surrounding spaces are ignored.
+- `meta.routeCount` is the number of routes in the response; with `truncated: true`
+  more exist. A total count would require full enumeration, which `limit` exists to avoid.
+
 **Rejected:** (B) routes with embedded node objects: heavy duplication and the
 client has to rebuild the graph. (C) a library-specific format such as Cytoscape
 `elements`: couples the API to one frontend; trivially derived from the chosen format.
