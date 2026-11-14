@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-function parsePort(value: string | undefined, fallback: number): number {
+export function parsePort(value: string | undefined, fallback: number): number {
   if (value === undefined || value === "") return fallback;
   const port = Number(value);
   if (!Number.isInteger(port) || port < 0 || port > 65535) {
@@ -13,7 +13,7 @@ function parsePort(value: string | undefined, fallback: number): number {
 }
 
 /** Comma-separated list, e.g. "rds,sql". Empty or unset → fallback. */
-function parseList(value: string | undefined, fallback: readonly string[]): readonly string[] {
+export function parseList(value: string | undefined, fallback: readonly string[]): readonly string[] {
   const items = (value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
   return items.length > 0 ? items : fallback;
 }
