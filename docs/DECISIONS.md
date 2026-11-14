@@ -33,8 +33,13 @@ path prevents revisiting. A route ends when the current node has no neighbour
 that is not already on the path (a true leaf, or every neighbour would close a cycle).
 
 **Why:** shortest, most readable option; cycle-safe because only simple paths are
-produced; the generator lets callers stop early or apply a limit. Recursion depth
-equals path length, which is far below the JS stack limit for any realistic graph.
+produced; the generator lets callers stop early or apply a limit.
+
+**Known limit (measured):** recursion depth equals route length, and nested `yield*`
+generators overflow the stack on a single route of roughly 2,900 nodes (plain recursion
+manages ~10k). The longest route in this data has 7 nodes, and a ~2,900-service call
+chain is unrealistic, so we keep the simpler recursive version and document the limit.
+If hit, the `RangeError` becomes a 500 response; the server keeps running.
 
 **Example:** edges `A→B`, `B→A`, `A→C`, starting at `A` → routes `A→C` and `A→B`.
 

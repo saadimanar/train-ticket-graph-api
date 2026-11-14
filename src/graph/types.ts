@@ -25,6 +25,12 @@ export interface Graph {
   readonly adjacency: ReadonlyMap<string, readonly string[]>;
 }
 
+/**
+ * A route: the node ids of a simple path, in order, with at least two nodes (D1).
+ * Edges are implied by consecutive ids.
+ */
+export type Route = readonly string[];
+
 export type GraphWarningCode =
   | "INVALID_NODE"
   | "INVALID_EDGE"
