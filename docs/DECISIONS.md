@@ -202,6 +202,14 @@ Validation has **two levels**, so one bad entry cannot fail the whole parse:
 | A single malformed node/edge entry | Skipped with a warning. |
 | File missing, not JSON, or `nodes`/`edges` not arrays | Startup fails with a clear error. |
 
+**Clarifications made during implementation:**
+- An undefined `from` node also gets a placeholder (same reasoning as for targets).
+- The vulnerability schema is lenient (all fields optional, unknown fields kept): an
+  unusual finding must not cause its whole node to be dropped, which would hide it.
+- An edge record is validated as a unit: one invalid target skips that record.
+- Warnings carry a code (`INVALID_NODE`, `INVALID_EDGE`, `DUPLICATE_NODE`,
+  `DUPLICATE_EDGE`, `MISSING_NODE`) so tests and logs can match on them.
+
 **Why (placeholder node):** no information is lost. A call to a service we have no
 data about is itself a security-relevant fact, and `missing: true` lets clients render
 it distinctly. Filters treat it safely by default.

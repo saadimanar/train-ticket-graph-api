@@ -1,5 +1,16 @@
 import { createApp } from "./app.js";
 import { config } from "./config.js";
+import { loadGraph } from "./graph/loadGraph.js";
+
+// Loaded once at startup (D7). An unusable file stops the process with a clear
+// message; recoverable data problems were already logged as warnings (D8).
+// The graph is passed to createApp in Phase 5.
+try {
+  await loadGraph(config.dataPath);
+} catch (err) {
+  console.error(`Failed to start: ${(err as Error).message}`);
+  process.exit(1);
+}
 
 const app = createApp();
 
