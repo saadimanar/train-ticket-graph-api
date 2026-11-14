@@ -37,7 +37,7 @@ produced; the generator lets callers stop early or apply a limit.
 
 **Known limit (measured):** recursion depth equals route length, and nested `yield*`
 generators overflow the stack on a single route of roughly 2,900 nodes (plain recursion
-manages ~10k). The longest route in this data has 7 nodes, and a ~2,900-service call
+manages ~10k). The longest route in this data has 6 nodes, and a ~2,900-service call
 chain is unrealistic, so we keep the simpler recursive version and document the limit.
 If hit, the `RangeError` becomes a 500 response; the server keeps running.
 
@@ -242,8 +242,8 @@ it distinctly. Filters treat it safely by default.
 
 ```
 src/
-  index.ts            # loads graph, builds registry, starts the server
-  app.ts              # createApp({ graph, registry }): Express app, no listen
+  index.ts            # entry: loads graph, default-exports the app, listens locally (D13)
+  createApp.ts        # createApp({ graph, registry, allowedOrigins }): Express app, no listen
   config.ts           # port, data path, sink kinds
   graph/              # Zod schema, types, pure buildGraph, file loader
   traversal/          # findRoutes DFS generator (no Express dependency)
@@ -264,6 +264,7 @@ API tests can run the real app against small fixture graphs.
 ## D10. API contract
 
 - `GET /health` → `200 { "status": "ok" }`.
+- `GET /graph` → `200 { nodes, edges, meta: { nodeCount, edgeCount } }`: the full graph (D11).
 - `GET /filters` → `200 { "filters": [{ "name", "description" }] }`, built from the registry.
 - `GET /routes?filters=a,b&match=all|any&limit=N` → `200 { nodes, edges, routes, meta }` (D6).
   Filter names: `public`, `sink`, `vulnerable`.
@@ -279,3 +280,76 @@ API tests can run the real app against small fixture graphs.
 `public,sink` 0 (expected: `frontend`'s routes never reach a sink and
 `gateway-service` has no edges). Every route ending in `prod-postgresdb` passes through
 a vulnerable node, so `sink` ⊂ `vulnerable` on this data.
+
+## D11. `GET /graph`: the full graph for the client
+
+**Decision:** `GET /graph` returns every node (including isolated ones and placeholders)
+and every edge, as `{ nodes, edges, meta: { nodeCount, edgeCount } }`. It uses the
+**same node and edge objects and ids** as `/routes` (one shared serialiser), so a
+client draws the graph once and highlights routes from `/routes` by id. The data is
+static, so the body is built once when the app is created. No query params.
+
+Every node in every response always carries the fields a UI needs for styling:
+`id`, `kind`, `publicExposed`, `vulnerabilities`, `missing` (defaults applied, D8).
+`language`, `path`, `metadata` are present only when the data has them. A test
+checks this for every node of `/graph` and `/routes`.
+
+**Why:** without it, a client could only reconstruct the parts of the graph that
+appear in some route, so isolated services (including the public `gateway-service`)
+would never be drawn.
+
+**Rejected:** `/routes?includeGraph=true`: mixes two concerns and returns the full
+graph again on every filter change.
+
+## D12. CORS
+
+**Decision:** the `cors` package with an exact-match allow-list from `ALLOWED_ORIGINS`
+(comma-separated). Unset: `http://localhost:5173` (Vite dev server) when
+`NODE_ENV !== "production"`, **no origins** in production. Each entry must be a bare
+origin (`scheme://host[:port]`; a trailing slash is tolerated); anything else fails
+startup. Only `GET` is allowed cross-origin; preflight responses are cached for 10
+minutes. A disallowed origin gets no CORS headers, so the browser blocks the response
+while the API itself still answers normally (CORS is not access control).
+
+**Why:**
+- Exact origins, no wildcards: `*.vercel.app` would admit anyone's deployment.
+- Failing closed in production: a forgotten env var shows up as a visible CORS error
+  in the frontend rather than an API open to every site. A startup log line says so.
+- Validating entries at startup turns a typo like `localhost:5173` (no scheme) into
+  a clear error instead of a silent mismatch.
+
+**Rejected:** `origin: "*"`: simplest and harmless for public read-only data, but the
+task asked for an env-driven allow-list, and it can't be narrowed later without a
+config change anyway. Hand-written CORS middleware: the package handles preflight
+and `Vary: Origin` correctly.
+
+## D13. Vercel deployment
+
+**Decision:** use Vercel's zero-config Express support. `src/index.ts` is the single
+entry: it loads the graph at module level, builds the app and `export default`s it;
+it calls `listen()` only when `VERCEL` is unset. No `vercel.json` is needed.
+
+Details, each found by running `vercel build` locally:
+- **`src/app.ts` was renamed to `src/createApp.ts`.** Vercel's detection checks
+  `src/app.*` before `src/index.*`, so it picked `app.ts`, which has no default export.
+- **The entry must import `express` itself** (`import type { Express }`), or
+  detection rejects it ("No entrypoint found which imports express").
+- **The data file is `import`ed** (`with { type: "json" }`) instead of read from a
+  computed path, so the bundler always includes it. `GRAPH_DATA_PATH` still loads
+  a file from disk when set (local use).
+- **TypeScript is pinned to 6.0.** Vercel compiles through the TypeScript JS API,
+  which TypeScript 7 (native Go port) does not ship; with 7 the build fails with
+  `Cannot read properties of undefined (reading 'readFile')`.
+
+The graph loads **once per cold start** (module evaluation), not per request; warm
+invocations reuse it. On Vercel a load failure throws, failing the cold start with
+the error in the function logs; locally it exits with code 1.
+
+**Verified:** `vercel build` produces one function with handler `src/index.js` and
+`data/train-ticket-graph.json` bundled. Importing that output with `VERCEL=1`
+loaded the graph once (~50 ms), did not listen, and served `/graph`, `/routes` and
+CORS headers correctly. Not yet verified with a real deployment.
+
+**Rejected:** an `api/index.ts` function plus `vercel.json` rewrites: older pattern,
+more config, and it needs `includeFiles` for the data. Loading the graph inside the
+handler: would re-parse on every request.
