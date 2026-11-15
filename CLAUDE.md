@@ -1,6 +1,6 @@
 # Project context
 
-Home exercise for a backend role at Backslash (application security company).
+Home exercise for a backend role.
 
 ## Task
 Load `data/train-ticket-graph.json` (a graph of the Train Ticket microservices)

@@ -318,9 +318,9 @@ while the API itself still answers normally (CORS is not access control).
 - Validating entries at startup turns a typo like `localhost:5173` (no scheme) into
   a clear error instead of a silent mismatch.
 
-**Rejected:** `origin: "*"`: simplest and harmless for public read-only data, but the
-task asked for an env-driven allow-list, and it can't be narrowed later without a
-config change anyway. Hand-written CORS middleware: the package handles preflight
+**Rejected:** `origin: "*"`: simplest and harmless for public read-only data, but we
+wanted an explicit allow-list that fails closed, and `*` can't be narrowed later
+without a config change anyway. Hand-written CORS middleware: the package handles preflight
 and `Vary: Origin` correctly.
 
 ## D13. Vercel deployment
@@ -348,7 +348,9 @@ the error in the function logs; locally it exits with code 1.
 **Verified:** `vercel build` produces one function with handler `src/index.js` and
 `data/train-ticket-graph.json` bundled. Importing that output with `VERCEL=1`
 loaded the graph once (~50 ms), did not listen, and served `/graph`, `/routes` and
-CORS headers correctly. Not yet verified with a real deployment.
+CORS headers correctly. Also verified on the real deployment at
+<https://train-ticket-graph-api.vercel.app>: its responses are identical to a local
+run, and only the configured origins get CORS headers.
 
 **Rejected:** an `api/index.ts` function plus `vercel.json` rewrites: older pattern,
 more config, and it needs `includeFiles` for the data. Loading the graph inside the
