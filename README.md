@@ -20,7 +20,6 @@ render them directly. Filters are pluggable: a new one is a new file plus one li
 - [Adding a filter](#adding-a-filter)
 - [Assumptions and known limitations](#assumptions-and-known-limitations)
 - [How this would scale](#how-this-would-scale)
-- [How I used AI](#how-i-used-ai)
 
 ## Try it
 
@@ -420,7 +419,3 @@ For a much larger graph, in order of value:
 6. **Beyond one process:** move CPU-heavy queries to worker threads, cache responses
    per query (the data is static, so the cache never needs clearing), or store the
    graph in a graph database (e.g. Neo4j) once it no longer fits in memory.
-
-## How I used AI
-
-TODO
