@@ -38,21 +38,21 @@ export interface NodeDto {
   missing: boolean;
 }
 
-export interface EdgeDto {
+interface EdgeDto {
   /** `from->to`; unique because graph building merges duplicate edges (D8). */
   id: string;
   from: string;
   to: string;
 }
 
-export interface RouteDto {
+interface RouteDto {
   /** `r0`, `r1`, …: stable within one response only. */
   id: string;
   nodes: string[];
   edges: string[];
 }
 
-export const edgeId = (from: string, to: string): string => `${from}->${to}`;
+const edgeId = (from: string, to: string): string => `${from}->${to}`;
 
 /**
  * Builds the client-ready response. `nodes` and `edges` contain only what the

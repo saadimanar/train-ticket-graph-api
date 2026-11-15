@@ -19,7 +19,3 @@ export function createDefaultRegistry({ sinkKinds = config.sinkKinds }: DefaultR
     vulnerableFilter,
   ]);
 }
-
-export type { FilterRegistry } from "./registry.js";
-export { UnknownFilterError } from "./registry.js";
-export type { RouteFilter } from "./types.js";

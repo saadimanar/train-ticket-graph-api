@@ -39,7 +39,7 @@ export function loadBundledGraph(logger: Logger = console): Graph {
 }
 
 /** Builds the graph from already-parsed data and logs warnings plus a summary. */
-export function graphFromData(data: unknown, source: string, logger: Logger = console): Graph {
+function graphFromData(data: unknown, source: string, logger: Logger = console): Graph {
   const { graph, warnings } = buildGraph(data);
   for (const warning of warnings) {
     logger.warn(`[graph] ${warning.code}: ${warning.message}`);

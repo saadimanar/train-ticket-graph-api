@@ -136,8 +136,8 @@ described in the README under scaling.
 ## D6. API shape
 
 **Decision:**
-- Endpoints: `GET /routes`, `GET /filters` (name + description from the registry),
-  `GET /health`.
+- Endpoints: `GET /routes`, `GET /graph` (the full graph, D11), `GET /filters`
+  (name + description from the registry), `GET /health`.
 - `GET /routes` query params:
   - `filters`: comma-separated filter names (`filters=public,sink`); empty/missing
     means no filters.
@@ -169,6 +169,9 @@ described in the README under scaling.
 - Query params are **strict**: an unknown param is a 400. Otherwise the typo
   `?filter=public` would silently return every route, which is the wrong failure mode
   for a security query.
+- `limit` must be plain digits (`/^\d+$/`), with no trimming or numeric coercion:
+  `1e3`, `0x10`, `5.0`, `-1`, ` 5 ` and an empty value are rejected with one message,
+  `limit must be an integer between 1 and 10000`. Absent → the default.
 - A repeated param (`filters=public&filters=sink`) is accepted as well as the
   comma-separated form; blank entries and surrounding spaces are ignored.
 - `meta.routeCount` is the number of routes in the response; with `truncated: true`
@@ -244,12 +247,13 @@ it distinctly. Filters treat it safely by default.
 src/
   index.ts            # entry: loads graph, default-exports the app, listens locally (D13)
   createApp.ts        # createApp({ graph, registry, allowedOrigins }): Express app, no listen
-  config.ts           # port, data path, sink kinds
+  config.ts           # env parsing: port, data path, sink kinds, CORS origins, Vercel flag; limit bounds
   graph/              # Zod schema, types, pure buildGraph, file loader
   traversal/          # findRoutes DFS generator (no Express dependency)
   filters/            # RouteFilter interface, registry, one file per filter, index.ts list
   engine/             # query engine (pruning, match, limit) + response shaping
   api/                # routers, query-param schema, error handling
+  shared/             # Zod issue formatting, used by graph loading and the API
 tests/
   fixtures/           # small hand-built graphs
   unit/               # graph building, traversal, filters, registry, engine

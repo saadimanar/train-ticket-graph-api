@@ -24,15 +24,37 @@ describe("RoutesQuerySchema", () => {
 
   it.each([
     [{ match: "either" }, "match"],
-    [{ limit: "0" }, "at least 1"],
-    [{ limit: "10001" }, "at most 10000"],
-    [{ limit: "2.5" }, "integer"],
-    [{ limit: "abc" }, "integer"],
-    [{ limit: ["1", "2"] }, "integer"],
     [{ filter: "public" }, "filter"],
   ])("rejects %j", (query, message) => {
     const result = parse(query);
     expect(result.success).toBe(false);
     expect(JSON.stringify(result.error?.issues)).toContain(message);
+  });
+
+  it.each(["1", "25", "10000"])("accepts limit=%j", (limit) => {
+    expect(parse({ limit }).data?.limit).toBe(Number(limit));
+  });
+
+  it.each([
+    ["0"],
+    ["10001"],
+    ["1e3"],
+    ["0x10"],
+    ["5.0"],
+    ["2.5"],
+    ["-1"],
+    ["+5"],
+    [""],
+    [" "],
+    [" 5 "],
+    ["abc"],
+    ["99999999999999999999999"],
+    [["1", "2"]],
+  ])("rejects limit=%j with one clear message", (limit) => {
+    const result = parse({ limit });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      "limit must be an integer between 1 and 10000",
+    ]);
   });
 });

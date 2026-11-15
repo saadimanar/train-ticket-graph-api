@@ -7,11 +7,9 @@ import type { RouteFilter } from "../../src/filters/types.js";
 const fake = (name: string): RouteFilter => ({ name, description: name, matches: () => true });
 
 describe("createRegistry", () => {
-  it("lists filters in registration order and looks them up by name", () => {
+  it("lists filters in registration order", () => {
     const registry = createRegistry([fake("b"), fake("a")]);
     expect(registry.list().map((f) => f.name)).toEqual(["b", "a"]);
-    expect(registry.get("a")?.name).toBe("a");
-    expect(registry.get("zzz")).toBeUndefined();
   });
 
   it("rejects duplicate names at startup", () => {
@@ -49,7 +47,8 @@ describe("default registry", () => {
 
   it("passes configured sink kinds to the sink filter", () => {
     const registry = createDefaultRegistry({ sinkKinds: ["dynamodb"] });
-    expect(registry.get("sink")?.description).toContain("dynamodb");
+    const sink = registry.list().find((f) => f.name === "sink");
+    expect(sink?.description).toContain("dynamodb");
   });
 
   it("registers one filter per filter file (guards against a forgotten registration)", () => {

@@ -133,15 +133,29 @@ describe("GET /routes on the provided data", () => {
 
     it.each([
       ["match=either", "match"],
-      ["limit=0", "at least 1"],
-      ["limit=10001", "at most 10000"],
-      ["limit=abc", "integer"],
       ["filter=public", 'Unrecognized key: "filter"'],
     ])("rejects ?%s with 400 INVALID_QUERY", async (query, message) => {
       const res = await request(app).get(`/routes?${query}`);
       expect(res.status).toBe(400);
       expect(res.body.error.code).toBe("INVALID_QUERY");
       expect(res.body.error.message).toContain(message);
+    });
+
+    it.each(["0", "10001", "20000", "1e3", "0x10", "5.0", "-1", "", "%20", "%205%20", "abc"])(
+      "rejects ?limit=%s with 400 INVALID_QUERY",
+      async (limit) => {
+        const res = await request(app).get(`/routes?limit=${limit}`);
+        expect(res.status).toBe(400);
+        expect(res.body).toEqual({
+          error: { code: "INVALID_QUERY", message: "Invalid query: limit: limit must be an integer between 1 and 10000" },
+        });
+      },
+    );
+
+    it("uses the default limit of 1000 when limit is absent", async () => {
+      const res = await request(app).get("/routes");
+      expect(res.status).toBe(200);
+      expect(res.body.meta).toMatchObject({ routeCount: 299, truncated: false });
     });
 
     it("only serves GET", async () => {

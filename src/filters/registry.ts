@@ -14,7 +14,6 @@ export class UnknownFilterError extends Error {
 export interface FilterRegistry {
   /** All filters, in registration order. */
   list(): readonly RouteFilter[];
-  get(name: string): RouteFilter | undefined;
   /**
    * Looks up filters by name, preserving order and dropping duplicates.
    * @throws UnknownFilterError listing every unknown name at once.
@@ -41,7 +40,6 @@ export function createRegistry(filters: readonly RouteFilter[]): FilterRegistry 
 
   return {
     list: () => all,
-    get: (name) => byName.get(name),
     resolve(names) {
       const unique = [...new Set(names)];
       const unknown = unique.filter((name) => !byName.has(name));

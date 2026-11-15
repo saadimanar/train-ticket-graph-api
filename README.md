@@ -19,6 +19,7 @@ render them directly. Filters are pluggable: a new one is a new file plus one li
 - [Design](#design)
 - [Adding a filter](#adding-a-filter)
 - [Assumptions and known limitations](#assumptions-and-known-limitations)
+- [Security notes](#security-notes)
 - [How this would scale](#how-this-would-scale)
 
 ## Try it
@@ -329,7 +330,7 @@ docs/DECISIONS.md       design decisions
 
 `createApp` receives the graph and the registry instead of loading them itself.
 That makes the API tests run the real app against small graphs, including one with
-a cycle and one with a missing node. 176 tests; coverage is about 99% of lines in `src/`.
+a cycle and one with a missing node. 197 tests; coverage is about 99% of lines in `src/`.
 
 ## Adding a filter
 
@@ -385,6 +386,20 @@ rejects duplicate or invalid names at startup.
   deployment, so a preview frontend must be added to `ALLOWED_ORIGINS` explicitly
   (or use a fixed branch domain). Wildcards like `*.vercel.app` are deliberately not
   supported: anyone can deploy to `vercel.app`.
+
+## Security notes
+
+- **Strict input validation.** `/routes` rejects unknown parameters, unknown filter
+  names and any `match` other than `all` or `any`. `limit` must be plain digits
+  between 1 and 10000: values like `1e3`, `0x10`, `5.0`, `-1`, ` 5 ` or an empty
+  value are a 400, not silently coerced. Errors never include internal details.
+- **CORS allow-list.** Only the exact origins in `ALLOWED_ORIGINS` get CORS headers,
+  with no wildcards. CORS is **not access control**: it only stops other websites'
+  scripts from reading responses in a browser. Anyone can still call the API directly,
+  for example with `curl`.
+- **Out of scope for this exercise:** authentication and rate limiting. Both would be
+  required in production, since the graph describes where a system is exposed and
+  vulnerable.
 
 ## How this would scale
 

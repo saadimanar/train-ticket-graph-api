@@ -1,4 +1,4 @@
-import { formatZodIssues as formatIssues } from "../shared/zod.js";
+import { formatZodIssues } from "../shared/zod.js";
 import { GraphFileSchema, RawEdgeSchema, RawNodeSchema, type RawNode } from "./schema.js";
 import type { Graph, GraphNode, GraphWarning } from "./types.js";
 
@@ -25,7 +25,7 @@ export function buildGraph(data: unknown): BuildGraphResult {
   // Level 1: strict top-level shape; entries stay `unknown`.
   const file = GraphFileSchema.safeParse(data);
   if (!file.success) {
-    throw new GraphDataError(`Invalid graph file: ${formatIssues(file.error)}`);
+    throw new GraphDataError(`Invalid graph file: ${formatZodIssues(file.error)}`);
   }
 
   const warnings: GraphWarning[] = [];
@@ -38,7 +38,7 @@ export function buildGraph(data: unknown): BuildGraphResult {
     if (!parsed.success) {
       warnings.push({
         code: "INVALID_NODE",
-        message: `Skipped ${describeEntry("nodes", index, entry, "name")}: ${formatIssues(parsed.error)}`,
+        message: `Skipped ${describeEntry("nodes", index, entry, "name")}: ${formatZodIssues(parsed.error)}`,
       });
       return;
     }
@@ -68,7 +68,7 @@ export function buildGraph(data: unknown): BuildGraphResult {
     if (!parsed.success) {
       warnings.push({
         code: "INVALID_EDGE",
-        message: `Skipped ${describeEntry("edges", index, entry, "from")}: ${formatIssues(parsed.error)}`,
+        message: `Skipped ${describeEntry("edges", index, entry, "from")}: ${formatZodIssues(parsed.error)}`,
       });
       return;
     }

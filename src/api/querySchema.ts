@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { config } from "../config.js";
 
+const LIMIT_MESSAGE = `limit must be an integer between 1 and ${config.maxRouteLimit}`;
+
 /**
  * Query params of GET /routes (D6). Strict: an unknown param (e.g. the typo
  * `filter=public`) is a 400, rather than silently returning every route.
@@ -21,12 +23,14 @@ export const RoutesQuerySchema = z.strictObject({
         .filter((name) => name.length > 0),
     ),
   match: z.enum(["all", "any"]).default("all"),
-  limit: z.coerce
-    .number<string>({ error: "limit must be an integer" })
-    .int("limit must be an integer")
-    .min(1, "limit must be at least 1")
-    .max(config.maxRouteLimit, `limit must be at most ${config.maxRouteLimit}`)
+  /**
+   * Digits only, with no trimming or coercion: `1e3`, `0x10`, `5.0`, `-1`, ` 5 `
+   * and an empty value are all rejected. Absent → the default.
+   */
+  limit: z
+    .string({ error: LIMIT_MESSAGE })
+    .regex(/^\d+$/, LIMIT_MESSAGE)
+    .transform(Number)
+    .pipe(z.number().min(1, LIMIT_MESSAGE).max(config.maxRouteLimit, LIMIT_MESSAGE))
     .default(config.defaultRouteLimit),
 });
-
-export type RoutesQuery = z.infer<typeof RoutesQuerySchema>;

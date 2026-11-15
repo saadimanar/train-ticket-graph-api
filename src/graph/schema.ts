@@ -48,4 +48,3 @@ export const RawEdgeSchema = z.object({
 
 export type Vulnerability = z.infer<typeof VulnerabilitySchema>;
 export type RawNode = z.infer<typeof RawNodeSchema>;
-export type RawEdge = z.infer<typeof RawEdgeSchema>;
